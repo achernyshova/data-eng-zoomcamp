@@ -1,2 +1,5 @@
 # data-eng-zoomcamp
-Workshops
+
+Data Engineering Zoomcamp
+
+[https://datatalks.club/docs/courses/data-engineering-zoomcamp/](https://datatalks.club/docs/courses/data-engineering-zoomcamp/) 
