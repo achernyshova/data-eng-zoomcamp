@@ -1,0 +1,52 @@
+id: homework_taxi_2021_foreach
+namespace: zoomcamp
+description: |
+  Bonus challenge: Loop over Year-Month and taxi-type combinations using ForEach task.
+  This flow processes all 2021 data (Jan-Jul) for both yellow and green taxi types.
+  CSV Data used in the course: https://github.com/DataTalksClub/nyc-tlc-data/releases
+
+tasks:
+  - id: generate_combinations
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    tasks:
+      - id: create_combinations_script
+        type: io.kestra.plugin.scripts.python.Script
+        taskRunner:
+          type: io.kestra.plugin.core.runner.Process
+        script: |
+          import json
+          
+          # Generate all combinations of taxi types and 2021 months (Jan-Jul)
+          taxi_types = ['yellow', 'green']
+          months = ['01', '02', '03', '04', '05', '06', '07']
+          year = '2021'
+          
+          combinations = []
+          for taxi in taxi_types:
+              for month in months:
+                  combinations.append({
+                      'taxi': taxi,
+                      'year': year,
+                      'month': month
+                  })
+          
+          print(json.dumps(combinations))
+
+  - id: process_each_combination
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.create_combinations_script.outputFiles['stdout'] | jq('.') }}"
+    tasks:
+      - id: process_taxi_data
+        type: io.kestra.plugin.core.flow.Subflow
+        namespace: zoomcamp
+        flowId: homework_taxi_2021
+        inputs:
+          taxi: "{{ json(taskrun.value).taxi }}"
+          year: "{{ json(taskrun.value).year }}"
+          month: "{{ json(taskrun.value).month }}"
+        wait: true
+        transmitFailed: true
+
+  - id: log_completion
+    type: io.kestra.plugin.core.log.Log
+    message: "Successfully processed all 2021 taxi data (Jan-Jul) for both yellow and green taxis!"
